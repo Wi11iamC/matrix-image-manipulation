@@ -277,9 +277,7 @@ imatrix *multiply(imatrix *m1, imatrix *m2)
 
     // YOUR CODE HERE
     if (m1->width != m2->height)
-    {
         return NULL;
-    }
 
     imatrix *this_guy = init_blank_rgb_image(m1->height, m2->width, CHANNEL_NUM);
 
@@ -293,13 +291,6 @@ imatrix *multiply(imatrix *m1, imatrix *m2)
                 this_guy->g[i][j] = (m1->g[i][k] * m2->g[k][j]) <= 255 ? (m1->g[i][k] * m2->g[k][j]) : 255;
                 this_guy->b[i][j] = (m1->b[i][k] * m2->b[k][j]) <= 255 ? (m1->b[i][k] * m2->b[k][j]) : 255;
             }
-        }
-    }
-    for (int i = 0; i < m1->height; i++)
-    {
-        for (int j = 0; j < m2->width; j++)
-        {
-            printf("R: %d, G: %d, B: %d\n", this_guy->r[i][j], this_guy->g[i][j], this_guy->b[i][j]);
         }
     }
 
