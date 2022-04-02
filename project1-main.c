@@ -67,23 +67,37 @@ int main(int argc, char *argv[])
 
     // add two images
     imatrix *M2_resized = init_from_rgb_image(output_pixels, width, height, channels);
+
     imatrix *sum_image = M2_resized->add(M2_resized, M);
-    stbi_write_png("images/output_images/sum.png", width, height, CHANNEL_NUM, sum_image->rgb_image, width * CHANNEL_NUM);
+    if (sum_image == NULL)
+        printf("CANNOT ADD");
+    else
+        stbi_write_png("images/output_images/sum.png", width, height, CHANNEL_NUM, sum_image->rgb_image, width * CHANNEL_NUM);
+
     // subtract them
     imatrix *diff_image = sum_image->subtract(sum_image, M);
-    stbi_write_png("images/output_images/diff.png", width, height, CHANNEL_NUM, diff_image->rgb_image, width * CHANNEL_NUM);
+    if (diff_image == NULL)
+        printf("CANNOT SUBTRACT");
+    else
+        stbi_write_png("images/output_images/diff.png", width, height, CHANNEL_NUM, diff_image->rgb_image, width * CHANNEL_NUM);
 
     // scale then add
     float alpha = 0.4;
-    M2_resized->scale(M2_resized, width, height, alpha);
-    M->scale(M, width, height, (1 - alpha));
+    imatrix *M2_scaled = M2_resized->scale(M2_resized, width, height, alpha);
+    imatrix *M_scaled = M->scale(M, width, height, (1 - alpha));
     imatrix *scaled_sum = M2_resized->add(M2_resized, M);
+
     stbi_write_png("images/output_images/scaled_sum.png", width, height, CHANNEL_NUM, scaled_sum->rgb_image, width * CHANNEL_NUM);
+    stbi_write_png("images/output_images/M2_scaled.png", width, height, CHANNEL_NUM, M2_scaled->rgb_image, width * CHANNEL_NUM);
+    stbi_write_png("images/output_images/M_scaled.png", width, height, CHANNEL_NUM, M_scaled->rgb_image, width * CHANNEL_NUM);
 
     // scaled and translate (matrix multiply)
 
-    imatrix *multiply_image = M2_resized->multiply(M2_resized, M);
-    stbi_write_png("images/output_images/multiply.png", width, height, CHANNEL_NUM, multiply_image->rgb_image, width * CHANNEL_NUM);
+    imatrix *multiply_image = M2->multiply(M2, M);
+    if (multiply_image == NULL)
+        printf("CANNOT MULTIPLY");
+    else
+        stbi_write_png("images/output_images/multiply.png", width, height, CHANNEL_NUM, multiply_image->rgb_image, width * CHANNEL_NUM);
     // OPTIONAL: Test code for matrix multiply
 
     // free memory
@@ -217,13 +231,14 @@ imatrix *add(imatrix *m1, imatrix *m2)
         return NULL;
 
     imatrix *this_guy = init_blank_rgb_image(m1->width, m1->height, CHANNEL_NUM);
+
     for (int row = 0; row < m1->height; row++)
     {
         for (int col = 0; col < m1->width; col++)
         {
-            this_guy->r[row][col] = ((m1->r[row][col] + m2->r[row][col]) <= 255) ? (m1->r[row][col] + m2->r[row][col]) : 255;
-            this_guy->g[row][col] = ((m1->g[row][col] + m2->g[row][col]) <= 255) ? (m1->g[row][col] + m2->g[row][col]) : 255;
-            this_guy->b[row][col] = ((m1->b[row][col] + m2->b[row][col]) <= 255) ? (m1->b[row][col] + m2->b[row][col]) : 255;
+            this_guy->r[row][col] = ((m1->r[row][col] + m2->r[row][col]) <= 255) ? (uint8_t)(m1->r[row][col] + m2->r[row][col]) : 255;
+            this_guy->g[row][col] = ((m1->g[row][col] + m2->g[row][col]) <= 255) ? (uint8_t)(m1->g[row][col] + m2->g[row][col]) : 255;
+            this_guy->b[row][col] = ((m1->b[row][col] + m2->b[row][col]) <= 255) ? (uint8_t)(m1->b[row][col] + m2->b[row][col]) : 255;
         }
     }
 
@@ -253,9 +268,9 @@ imatrix *subtract(imatrix *m1, imatrix *m2)
     {
         for (int col = 0; col < m1->width; col++)
         {
-            this_guy->r[row][col] = ((m1->r[row][col] - m2->r[row][col]) >= 0) ? (m1->r[row][col] - m2->r[row][col]) : 0;
-            this_guy->g[row][col] = ((m1->g[row][col] - m2->g[row][col]) >= 0) ? (m1->g[row][col] - m2->g[row][col]) : 0;
-            this_guy->b[row][col] = ((m1->b[row][col] - m2->b[row][col]) >= 0) ? (m1->b[row][col] - m2->b[row][col]) : 0;
+            this_guy->r[row][col] = ((m1->r[row][col] - m2->r[row][col]) >= 0) ? (uint8_t)(m1->r[row][col] - m2->r[row][col]) : 0;
+            this_guy->g[row][col] = ((m1->g[row][col] - m2->g[row][col]) >= 0) ? (uint8_t)(m1->g[row][col] - m2->g[row][col]) : 0;
+            this_guy->b[row][col] = ((m1->b[row][col] - m2->b[row][col]) >= 0) ? (uint8_t)(m1->b[row][col] - m2->b[row][col]) : 0;
         }
     }
 
@@ -287,9 +302,9 @@ imatrix *multiply(imatrix *m1, imatrix *m2)
         {
             for (int k = 0; k < m1->width; k++)
             {
-                this_guy->r[i][j] = (m1->r[i][k] * m2->r[k][j]) <= 255 ? (m1->r[i][k] * m2->r[k][j]) : 255;
-                this_guy->g[i][j] = (m1->g[i][k] * m2->g[k][j]) <= 255 ? (m1->g[i][k] * m2->g[k][j]) : 255;
-                this_guy->b[i][j] = (m1->b[i][k] * m2->b[k][j]) <= 255 ? (m1->b[i][k] * m2->b[k][j]) : 255;
+                this_guy->r[i][j] = (m1->r[i][k] * m2->r[k][j]) <= 255 ? (uint8_t)(m1->r[i][k] * m2->r[k][j]) : 255;
+                this_guy->g[i][j] = (m1->g[i][k] * m2->g[k][j]) <= 255 ? (uint8_t)(m1->g[i][k] * m2->g[k][j]) : 255;
+                this_guy->b[i][j] = (m1->b[i][k] * m2->b[k][j]) <= 255 ? (uint8_t)(m1->b[i][k] * m2->b[k][j]) : 255;
             }
         }
     }
@@ -316,9 +331,9 @@ imatrix *scale(imatrix *this, int width, int height, float alpha)
     {
         for (int col = 0; col < this->width; col++)
         {
-            this->r[row][col] = ((this->r[row][col] * alpha));
-            this->g[row][col] = ((this->g[row][col] * alpha));
-            this->b[row][col] = ((this->b[row][col] * alpha));
+            this->r[row][col] = (uint8_t)((this->r[row][col] * alpha));
+            this->g[row][col] = (uint8_t)((this->g[row][col] * alpha));
+            this->b[row][col] = (uint8_t)((this->b[row][col] * alpha));
         }
     }
     this->write_rgb_to_image(this);
