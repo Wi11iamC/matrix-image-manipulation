@@ -11,8 +11,12 @@ This project is an image processing library that can process images using matrix
 
 ## Special Directories
 
-You can create the following extra directories, some of which have special behaviors. Only `pages` is required; you can delete them if you don't want to use their functionality.
+You can create the following extra directories, some of which have special behaviors.
 
 ### `output_images`
 
-The output_images directory contains your image result of runnning the program.
+The output_images directory contains the image result of runnning the program with test_iamge1.png and test_image2.png.
+
+### `output_images2`
+
+The output_images directory contains the image result of runnning the program with test_iamge3.png and test_image4.png.
